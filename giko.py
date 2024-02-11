@@ -4,20 +4,11 @@ import datetime
 import getopt
 import sys
 import time
-
+import importlib
+import importlib.util
+import threading
 import socketio
 import requests
-
-from plugin import blackjack
-from plugin import bank
-from plugin import memo
-from plugin import quotes
-from plugin import craps
-from plugin import roulette
-from plugin import poker
-from plugin import help
-from plugin import mod
-from plugin import finance
 
 sio = socketio.Client()
 session = requests.Session()
@@ -34,6 +25,30 @@ ircroom = "bar"
 plugins = ["blackjack", "craps", "roulette", "poker",
            "bank", "quotes", "memo", "help", "mod", "finance"]
 
+plugin : dict = {}
+def load_plugins():
+    global plugins
+    print(__debug__)
+    if len(plugins)>0:
+        for p in plugins:
+            try:
+                print("Import {} :".format(p),end='')
+                spec = importlib.util.spec_from_file_location(p,'./plugin/{}.py'.format(p));
+                if spec is not None :
+                    module  = importlib.util.module_from_spec(spec)
+                    if(module is not None):
+                        sys.modules["plugin.{}".format(p)] = module
+                        spec.loader.exec_module(module)
+                        module.cmd("test","test")
+                        print("{} loaded".format(p))
+                        plugin[p] = module
+                else:
+                    print("{} failed to load".format(p))
+            except Exception as ex:
+                print("{} failed to load : {}".format(p,ex))
+
+
+
 def main():
     global api
     server = "play.gikopoi.com"
@@ -42,7 +57,7 @@ def main():
     character = "naito_npc"
     name = "giko.py"
     password = ""
-
+    load_plugins()
     if len(sys.argv) > 1:
         print(sys.argv)
         room = sys.argv[1]
@@ -50,14 +65,6 @@ def main():
     if room == ircroom:
         global ircmode
         ircmode = True
-        
-        global ircrelay
-        from plugin import ircrelay
-
-        global plugins
-        plugins.append("ircrelay")
-
-        import threading
         x = threading.Thread(target=get_irc_msgs)
         x.start()
 
@@ -217,6 +224,24 @@ def server_msg(event,namespace):
         return
     
     for i in plugins:
+        try: 
+            cmd = plugin[i].cmd;
+            output.append(cmd(author, namespace))
+        except Exception as e:
+            print("{} failed.".format(i))
+    output = [i for i in output if i]
+    if len(output):
+        # need to rewrite list compression for multi-line messages
+        
+        if isinstance(output[0], list):
+            output = [o for oo in output for o in oo]
+                            
+        if len(output):
+            for o in output:
+                send_message(o)
+                time.sleep(1)
+
+
         cmd = getattr(eval(i), "cmd")
         output.append(cmd(author, namespace))
     output = [i for i in output if i]
