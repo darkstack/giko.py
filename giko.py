@@ -22,12 +22,10 @@ anti_spy = True
 ircmode = False
 ircroom = "bar"
 
-plugins = ["blackjack", "craps", "roulette", "poker",
-           "bank", "quotes", "memo", "help", "mod", "finance"]
+plugins = ["bank","blackjack", "craps", "roulette", "poker", "quotes", "memo", "help", "mod", "finance"]
 
 plugin : dict = {}
 def load_plugins():
-    global plugins
     print(__debug__)
     if len(plugins)>0:
         for p in plugins:
@@ -39,7 +37,6 @@ def load_plugins():
                     if(module is not None):
                         sys.modules["plugin.{}".format(p)] = module
                         spec.loader.exec_module(module)
-                        module.cmd("test","test")
                         print("{} loaded".format(p))
                         plugin[p] = module
                 else:
@@ -241,9 +238,6 @@ def server_msg(event,namespace):
                 send_message(o)
                 time.sleep(1)
 
-
-        cmd = getattr(eval(i), "cmd")
-        output.append(cmd(author, namespace))
     output = [i for i in output if i]
     if len(output):
         # need to rewrite list compression for multi-line messages

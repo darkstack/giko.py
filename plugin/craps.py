@@ -1,5 +1,5 @@
 import random
-from . import bank
+from plugin import bank
 
 state = {}
 # state[player] = [win, lose, amount]

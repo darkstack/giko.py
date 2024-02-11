@@ -1,5 +1,5 @@
 import random
-from . import bank
+from plugin import bank
 
 def cmd(player, msg):
     msg = msg.split()

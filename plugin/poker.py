@@ -2,7 +2,7 @@
 
 import random
 import copy
-from . import bank
+from plugin import bank
 
 state = {}
 # {player: [deck, hand, amount]}

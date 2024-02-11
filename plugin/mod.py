@@ -3,7 +3,7 @@ import re
 import requests
 import time
 
-from . import bank
+from plugin import bank
 
 with open("secret.txt", "r") as secret:
     secret = secret.read().splitlines()[0].strip()
